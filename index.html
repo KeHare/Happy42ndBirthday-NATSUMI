@@ -251,10 +251,15 @@
     background:linear-gradient(135deg,#6b4f1e,#37280f); box-shadow:inset 0 0 0 2px rgba(212,175,55,.5), 0 0 34px var(--sec);
     display:flex; align-items:center; justify-content:center; }
   .ob-cover span{ font-family:"Cinzel"; color:var(--gold-bright); font-size:clamp(1rem,4vw,1.8rem); letter-spacing:.22em; text-indent:.22em; text-shadow:0 0 14px var(--sec); }
-  .ob.away .ob-cover{ animation:coverIn .5s ease forwards; }
+  /* 所作①：本が静かに閉じる（表紙が現れる）→ 閉じた本がそっと呼吸する */
+  .ob.closing .ob-cover{ animation:coverIn .6s ease forwards, coverGlow 2.4s ease-in-out .6s infinite; }
   @keyframes coverIn{ to{ opacity:1; } }
-  .ob.away .ob-book{ animation:shutFly 1.1s ease forwards; }
-  @keyframes shutFly{ 0%{ transform:none; opacity:1; } 40%{ transform:scaleX(.5); opacity:1; } 100%{ transform:scaleX(.5) translateY(50vh) scale(.3) rotate(-6deg); opacity:0; } }
+  @keyframes coverGlow{ 0%,100%{ box-shadow:inset 0 0 0 2px rgba(212,175,55,.5), 0 0 30px var(--sec);} 50%{ box-shadow:inset 0 0 0 2px rgba(212,175,55,.78), 0 0 60px var(--sec);} }
+  .ob.closing .ob-book{ animation:bookShut .9s cubic-bezier(.5,0,.3,1) forwards; }
+  @keyframes bookShut{ 0%{ transform:none; } 100%{ transform:scaleX(.5); } }
+  /* 所作②：ひと呼吸おいて、ゆっくり棚へ収まる */
+  .ob.away .ob-book{ animation:bookFly 1.05s ease forwards; }
+  @keyframes bookFly{ 0%{ transform:scaleX(.5); opacity:1; } 100%{ transform:scaleX(.5) translateY(48vh) scale(.32) rotate(-6deg); opacity:0; } }
 
   #confetti{ position:fixed; inset:0; z-index:70; pointer-events:none; }
 
@@ -379,6 +384,7 @@
   "inscription": "人生の続きを。",
   "sign": "for NATSUMI — 2026.06.07",
   "sound": true,
+  "track": "",
 
   "themes": {
     "N": { "concept":"NOCTURNE", "tag":"a sky made just for you",
@@ -429,6 +435,11 @@
     const n=parseInt(hex,16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; };
   // タップした文字Lを翡翠spanで包む（英文中の同じ文字も対象）
   const hl = (t,L)=>{ if(!t) return ''; return String(t).replace(new RegExp('('+L+')','gi'),'<span class="jade">$1</span>'); };
+  // 訪問記録を送信（画像ビーコン・CORS不要・送りっぱなし）
+  function track(ev,door){ try{ if(!CFG.track) return;
+    const u=CFG.track+(CFG.track.indexOf('?')<0?'?':'&')+'event='+encodeURIComponent(ev)
+      +'&door='+encodeURIComponent(door||'')+'&t='+Date.now();
+    new Image().src=u; }catch(e){} }
 
   /* 共通DOM */
   $('#bigNum').textContent = CFG.birthYear + '  —  ' + CFG.year;   // 1984 — 2026（人生の幅で表現）
@@ -613,6 +624,7 @@
     if(started) return; started=true;
     const letter=ringLetters[_li];
     applyTheme(letter);
+    track('enter', letter);
     chord();
     gate.classList.add('gone');
     later(()=>{ gate.style.display='none'; runCinema(); },1500);
@@ -703,6 +715,7 @@
     });
   }
   buildInscription();
+  track('visit');   // サイトを開いた
 
   // 開いた本：1ページ＝1英文＋訳。スワイプでめくる
   let reviewPages=[], reviewIdx=0, reviewTurning=false, reviewAutoTimer=null;
@@ -742,6 +755,7 @@
   }
   // フェーズ1：本が開き、英文＋訳が1ページずつ
   function openReviewScene(){
+    track('open_book');
     buildReview();
     const ob=$('#openbook'), rv=$('#obReview'), ins=$('#obInscribe');
     rv.classList.remove('hide','in'); rv.style.display=''; ins.style.display='none';
@@ -761,14 +775,17 @@
     const lines=[...document.querySelectorAll('#obInscribe .ink-line')];
     let t=300; lines.forEach(l=>{ const d=+l.dataset.dur; later(()=>l.classList.add('go'), t); t+=d+350; });
     const writeEnd=t+250;
-    later(()=> ob.classList.add('away'), writeEnd);                     // 本を閉じて棚へ
-    later(()=>{ ob.classList.remove('show');
+    // 間（あわい）を大切に：所作ごとに呼吸を置く。ただし気配は絶やさない。
+    later(()=> ob.classList.add('closing'), writeEnd+1000);             // ① 書いた言葉を味わってから、本が閉じる
+    later(()=> ob.classList.add('away'),    writeEnd+2900);             // ② ひと呼吸（閉じた本がそっと光る）→ 棚へ
+    later(()=>{ ob.classList.remove('show');                            //    暗幕が晴れ、棚に収まる
                 const nb=$('.book.new'); if(nb) nb.classList.remove('await');
-                addBurst(innerWidth/2, innerHeight*0.55); if(!running){ running=true; confLoop(); } }, writeEnd+1000);
-    later(()=>{ ob.style.display='none'; ob.classList.remove('away'); }, writeEnd+1900);
-    later(()=> $('#shelfCaption').classList.add('in'), writeEnd+2000);
-    later(()=> replay.classList.add('in'), writeEnd+2600);
-    later(()=> unfreezeScroll(), writeEnd+2700);                          // 儀式が終わったらスクロール解放
+                addBurst(innerWidth/2, innerHeight*0.55); if(!running){ running=true; confLoop(); }
+                track('finished'); }, writeEnd+3450);
+    later(()=>{ ob.style.display='none'; ob.classList.remove('away','closing'); }, writeEnd+4100);
+    later(()=> $('#shelfCaption').classList.add('in'), writeEnd+4600);  // ③ ひと呼吸おいて、結びの言葉
+    later(()=> replay.classList.add('in'),             writeEnd+5700);
+    later(()=> unfreezeScroll(),                       writeEnd+5800);  // 全て終えてスクロール解放
   }
 
   let shelfDone=false, frozenY=0, awaitingTap=false, awaitingPage=false;
@@ -791,6 +808,7 @@
     }
   })();
   new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting && !shelfDone){ shelfDone=true;
+      track('bookshelf');
       $('#bookshelf').scrollIntoView({behavior:'smooth', block:'start'});  // 本棚を画面いっぱいに合わせる
       later(()=>{ freezeScroll();                                          // スクロールを固定（見逃し防止）
         document.querySelectorAll('.books').forEach(b=>b.classList.add('rise')); // 既刊が立ち上がる
