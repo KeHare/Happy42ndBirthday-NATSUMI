@@ -16,7 +16,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&family=Klee+One:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -123,7 +123,7 @@
   section{ min-height:100vh; min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12vh 7vw; text-align:center; }
   #hero{ gap:3vh; }
   #hero .kicker{ font-family:"Cinzel"; letter-spacing:.42em; text-indent:.42em; font-size:clamp(.6rem,2.4vw,.95rem); color:rgba(244,239,227,.62); }
-  #hero h1{ font-family:"Cinzel"; font-weight:700; line-height:1; font-size:clamp(3.4rem,22vw,13rem); letter-spacing:.05em; text-shadow:0 0 45px var(--sec); }
+  #hero h1{ font-family:"Cinzel"; font-weight:500; line-height:1; font-size:clamp(1.7rem,7vw,3.8rem); letter-spacing:.16em; text-indent:.16em; text-shadow:0 0 40px var(--sec); white-space:nowrap; }
   #hero .name{ font-family:"Cinzel"; font-weight:500; letter-spacing:.32em; text-indent:.32em; font-size:clamp(1rem,4.4vw,2rem); }
   .divider{ width:1px; height:9vh; background:linear-gradient(var(--sec),transparent); margin-top:2vh; opacity:.7; }
   .scroll-hint{ font-family:"Cormorant Garamond"; font-style:italic; font-size:.9rem; color:rgba(244,239,227,.4); margin-top:1.5vh; animation:pulse 2.6s ease-in-out infinite; }
@@ -148,6 +148,114 @@
   .replay-note{ font-family:"Cormorant Garamond"; font-style:italic; font-size:.85rem; color:rgba(244,239,227,.4); margin-top:1.4vh; opacity:0; transition:opacity 2s ease 1.8s; }
   .replay-note.in{ opacity:1; }
 
+  /* ===== 本棚（フィナーレの先・人生の蔵書） ===== */
+  #bookshelf{ gap:5vh; }
+  .shelf-kicker{ font-family:"Cinzel"; letter-spacing:.42em; text-indent:.42em; font-size:clamp(.6rem,2.4vw,.95rem); color:rgba(244,239,227,.55); }
+  /* 本棚の筐体（木枠＋金の縁＋背板＋棚板） */
+  .bookcase{ position:relative; width:min(94vw,780px); padding:16px 16px 0; border-radius:8px;
+    background:linear-gradient(180deg,#17120c,#0b0805);
+    box-shadow:0 0 0 2px #2a2110, 0 0 0 3px rgba(212,175,55,.28), inset 0 0 55px rgba(0,0,0,.6), 0 38px 75px rgba(0,0,0,.62); }
+  .shelf + .shelf{ margin-top:14px; }
+  .books{ position:relative; display:flex; align-items:flex-end; flex-wrap:nowrap; gap:clamp(2px,.6vw,5px); height:clamp(120px,23vh,210px); padding:0; }
+  .shelf:first-child .books{ justify-content:space-between; }   /* 上段：端から端まで */
+  .shelf:last-child  .books{ justify-content:flex-start; }      /* 下段：左詰め（右に未来の余白） */
+  .plank{ height:15px; margin:4px -16px 0; border-radius:0 0 4px 4px;
+    background:linear-gradient(180deg,#3c2f16,#1a1308); box-shadow:inset 0 2px 0 rgba(212,175,55,.32), inset 0 -3px 6px rgba(0,0,0,.5); }
+  .shelf:last-child .plank{ border-radius:0 0 8px 8px; }
+  /* 一冊一冊（金箔押しの蔵書） */
+  .book{ --c:#c9a227; flex:0 1 auto; min-width:0; width:clamp(6px,1.7vw,15px); border-radius:2px 2px 0 0;
+    background:linear-gradient(90deg, rgba(255,255,255,.18), rgba(255,255,255,0) 38%, rgba(0,0,0,.30)), var(--c);
+    opacity:0; transform:translateY(46px); transition:transform .7s ease, opacity .7s ease;
+    box-shadow:inset -1px 0 0 rgba(0,0,0,.38); position:relative; }
+  .book.w1{ width:clamp(9px,2.2vw,16px); }
+  .book.w2{ width:clamp(11px,2.7vw,20px); }
+  .book.w3{ width:clamp(14px,3.2vw,26px); }
+  .book.w4{ width:clamp(17px,3.8vw,32px); }
+  .book::before{ content:""; position:absolute; left:0; right:0; top:16%; height:20%;
+    background:rgba(0,0,0,.22); border-top:1px solid rgba(247,231,166,.45); border-bottom:1px solid rgba(247,231,166,.45); }
+  /* 人生の節目の本（革装丁＋金の縦書きタイトル） */
+  .book.milestone{ width:clamp(20px,4.6vw,36px); --c:#241a0a; box-shadow:inset -1px 0 0 rgba(0,0,0,.5), inset 1px 0 0 rgba(255,255,255,.06); }
+  .book.milestone::before{ display:none; }
+  .book.milestone .title{ position:absolute; inset:8% 0; margin:auto; writing-mode:vertical-rl; text-orientation:upright;
+    font-family:"Hiragino Mincho ProN","Yu Mincho","Shippori Mincho",serif; font-weight:600;
+    font-size:clamp(10px,2.6vw,15px); letter-spacing:.06em; line-height:1.08; white-space:nowrap;
+    display:flex; align-items:center; justify-content:center; color:#ecd98f; text-shadow:0 0 4px rgba(0,0,0,.8); }
+  .books.rise .book:not(.new){ opacity:1; transform:none; }
+  /* 最新刊 2026 */
+  .book.new{ --c:#f3dd8e; width:clamp(19px,4.8vw,37px);
+    background:linear-gradient(90deg, rgba(255,255,255,.30), rgba(255,255,255,0) 40%, rgba(0,0,0,.16)), linear-gradient(180deg,#fffbe9,var(--gold));
+    opacity:0; transform:translateY(-98px) rotate(7deg); }
+  .book.new::before{ background:rgba(255,255,255,.20); border-top-color:rgba(120,90,10,.6); border-bottom-color:rgba(120,90,10,.6); }
+  .books.rise .book.new.reveal{ opacity:1; transform:none;
+    transition:transform 1.1s cubic-bezier(.18,1.35,.3,1), opacity .8s ease, box-shadow 1s ease;
+    box-shadow:0 0 24px var(--sec), 0 0 54px rgba(212,175,55,.5); }
+  .book.new{ cursor:pointer; }
+  .book.new.await{ animation:newPulse 1.7s ease-in-out infinite; }
+  @keyframes newPulse{ 0%,100%{ box-shadow:0 0 20px var(--sec), 0 0 38px rgba(212,175,55,.32);} 50%{ box-shadow:0 0 34px var(--sec), 0 0 72px rgba(212,175,55,.6);} }
+  .tap-hint{ font-family:"Cormorant Garamond"; font-style:italic; font-size:clamp(.95rem,3.6vw,1.3rem); letter-spacing:.12em;
+    color:var(--gold-bright); cursor:pointer; opacity:0; transition:opacity 1s ease; text-shadow:0 0 16px var(--sec); }
+  .tap-hint.in{ opacity:1; animation:hintPulse 2.4s ease-in-out infinite; }
+  @keyframes hintPulse{ 0%,100%{ opacity:.55; } 50%{ opacity:1; } }
+  .book.new .title{ position:absolute; inset:8% 0; margin:auto; writing-mode:vertical-rl; text-orientation:upright;
+    font-family:"Cinzel",serif; font-weight:700; font-size:clamp(10px,2.6vw,16px); letter-spacing:.08em; line-height:1.1;
+    display:flex; align-items:center; justify-content:center; white-space:nowrap; color:#4a3608; text-shadow:0 0 3px rgba(255,255,255,.55);
+    opacity:0; transition:opacity .9s ease .4s; }
+  .book.new.reveal .title{ opacity:1; }
+  .shelf-caption{ opacity:0; transform:translateY(14px); transition:opacity 1.4s ease, transform 1.4s ease; }
+  .shelf-caption.in{ opacity:1; transform:none; }
+  .sc-en{ font-family:"Cormorant Garamond"; font-style:italic; font-size:clamp(1.1rem,4.4vw,1.8rem); color:var(--gold-bright); }
+  .sc-jp{ font-family:"Hiragino Mincho ProN","Yu Mincho","Shippori Mincho",serif; font-size:clamp(1rem,4vw,1.5rem); letter-spacing:.16em; text-indent:.16em; color:rgba(244,239,227,.82); margin-top:1.6vh; }
+
+  /* ===== 最新刊に書き入れる場面（ガラスペン） ===== */
+  .ob{ position:fixed; inset:0; z-index:85; display:flex; align-items:center; justify-content:center; padding:6vw;
+    background:radial-gradient(circle at 50% 45%, rgba(12,9,5,.55), rgba(0,0,0,.9));
+    opacity:0; visibility:hidden; transition:opacity .8s ease, visibility .8s; }
+  .ob.show{ opacity:1; visibility:visible; }
+  .ob-book{ position:relative; display:flex; width:min(88vw,720px); height:min(58vh,440px);
+    filter:drop-shadow(0 34px 66px rgba(0,0,0,.65)); transform-origin:center; }
+  .ob.show .ob-book{ animation:obIn .9s cubic-bezier(.2,1,.3,1) both; }
+  @keyframes obIn{ from{ transform:translateY(20px) scale(.92); opacity:0; } to{ transform:none; opacity:1; } }
+  .ob-page{ flex:1 1 50%; position:relative; }
+  .ob-page.left{ border-radius:7px 0 0 7px; background:linear-gradient(90deg,#efe6cd,rgba(120,95,50,.16)),linear-gradient(180deg,#f6efdc,#e7dabd); box-shadow:inset -16px 0 28px rgba(120,95,50,.22); }
+  .ob-page.right{ border-radius:0 7px 7px 0; background:linear-gradient(270deg,#efe6cd,rgba(120,95,50,.16)),linear-gradient(180deg,#f6efdc,#e7dabd); box-shadow:inset 16px 0 28px rgba(120,95,50,.22); }
+  .ob-book::before{ content:""; position:absolute; left:50%; top:2%; bottom:2%; width:2px; transform:translateX(-1px); background:linear-gradient(rgba(90,70,35,.45),rgba(60,45,20,.6)); z-index:3; }
+  .ob-write{ position:absolute; inset:0; z-index:4; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:5% 7%; }
+  /* レビュー面：英文＋日本語訳（1ページ1英文・スワイプでめくる） */
+  .ob-review{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:8% 8% 13%;
+    opacity:0; transition:opacity .7s ease; cursor:pointer; perspective:1400px; }
+  .ob-review.in{ opacity:1; }
+  .ob-review.hide{ opacity:0; }
+  .rv-content{ width:100%; max-width:92%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .rv-en{ font-family:"Cormorant Garamond"; font-style:italic; color:#6a5535; font-size:clamp(1rem,4vw,1.7rem); line-height:1.35; }
+  .rv-ja{ font-family:"Hiragino Mincho ProN","Yu Mincho","Shippori Mincho",serif; color:#3f3015; font-size:clamp(1.05rem,4.3vw,1.75rem); line-height:1.5; margin-top:.4em; }
+  .rv-count{ margin-top:1.3em; font-family:"Cinzel"; color:#9a7b3b; font-size:clamp(.68rem,2.3vw,.9rem); letter-spacing:.22em; text-indent:.22em; }
+  .rv-nav{ position:absolute; bottom:6%; left:0; right:0; text-align:center; font-family:"Hiragino Mincho ProN","Yu Mincho",serif; color:#9a7b3b; font-size:clamp(.78rem,2.7vw,1.05rem); letter-spacing:.14em; animation:hintPulse 2.2s ease-in-out infinite; }
+  .rv-leaf{ position:absolute; top:5%; bottom:5%; left:50%; right:5%; transform-origin:left center; transform:rotateY(0deg);
+    opacity:0; pointer-events:none; z-index:6; backface-visibility:hidden; border-radius:0 7px 7px 0;
+    background:linear-gradient(90deg,#f1e8cf,#e0d2b0); box-shadow:-10px 0 22px rgba(0,0,0,.28); }
+  .rv-leaf.turn{ animation:leafTurn .82s cubic-bezier(.4,.05,.3,1) forwards; }
+  @keyframes leafTurn{ 0%{opacity:1; transform:rotateY(0deg);} 100%{opacity:1; transform:rotateY(-172deg);} }
+  .ob-inscribe{ display:none; flex-direction:column; align-items:center; justify-content:center; gap:.4em; }
+  .ink-row{ display:block; text-align:center; }
+  .ink-line{ position:relative; display:inline-block; font-family:"Klee One",cursive; color:#46361c; font-size:clamp(1.3rem,6vw,2.6rem); line-height:1.7; }
+  .ink-line .ink-text{ display:inline-block; clip-path:inset(0 100% 0 0); }
+  .ink-line.go .ink-text{ animation:write var(--d,1.4s) cubic-bezier(.36,.06,.5,1) forwards; }
+  @keyframes write{ from{ clip-path:inset(0 100% 0 0);} to{ clip-path:inset(0 0 0 0);} }
+  .ink-line .pen{ position:absolute; bottom:.18em; left:0; width:3px; height:2.3em; transform:rotate(36deg); transform-origin:bottom left;
+    background:linear-gradient(to top, rgba(150,210,230,.25), rgba(255,255,255,.92)); border-radius:2px; box-shadow:0 0 8px rgba(170,225,240,.85); opacity:0; }
+  .ink-line .pen::after{ content:""; position:absolute; bottom:-5px; left:-1px; width:0; height:0; border-left:2px solid transparent; border-right:2px solid transparent; border-top:7px solid rgba(110,150,170,.95); }
+  .ink-line.go .pen{ animation:penmove var(--d,1.4s) cubic-bezier(.36,.06,.5,1) forwards, penwobble .55s ease-in-out infinite; }
+  @keyframes penmove{ 0%{opacity:1; left:0;} 88%{opacity:1;} 100%{opacity:0; left:100%;} }
+  @keyframes penwobble{ 0%,100%{ transform:rotate(36deg) translateY(0);} 50%{ transform:rotate(33deg) translateY(-1.6px);} }
+  .ob-cover{ position:absolute; top:0; bottom:0; left:25%; width:50%; border-radius:7px; opacity:0; z-index:5;
+    background:linear-gradient(135deg,#6b4f1e,#37280f); box-shadow:inset 0 0 0 2px rgba(212,175,55,.5), 0 0 34px var(--sec);
+    display:flex; align-items:center; justify-content:center; }
+  .ob-cover span{ font-family:"Cinzel"; color:var(--gold-bright); font-size:clamp(1rem,4vw,1.8rem); letter-spacing:.22em; text-indent:.22em; text-shadow:0 0 14px var(--sec); }
+  .ob.away .ob-cover{ animation:coverIn .5s ease forwards; }
+  @keyframes coverIn{ to{ opacity:1; } }
+  .ob.away .ob-book{ animation:shutFly 1.1s ease forwards; }
+  @keyframes shutFly{ 0%{ transform:none; opacity:1; } 40%{ transform:scaleX(.5); opacity:1; } 100%{ transform:scaleX(.5) translateY(50vh) scale(.3) rotate(-6deg); opacity:0; } }
+
   #confetti{ position:fixed; inset:0; z-index:70; pointer-events:none; }
 
   .corner{ position:fixed; z-index:20; width:clamp(40px,8vw,90px); height:clamp(40px,8vw,90px); opacity:.5; pointer-events:none; }
@@ -166,7 +274,7 @@
     .cc-name{ letter-spacing:.22em; text-indent:.22em; }
     .cine-date{ letter-spacing:.32em; text-indent:.32em; }
     .word{ font-size:clamp(1.5rem,7vw,2.4rem); line-height:1.55; max-width:14em; }
-    #hero h1{ font-size:clamp(4.5rem,32vw,9rem); }
+    #hero h1{ font-size:clamp(1.5rem,8vw,2.4rem); letter-spacing:.1em; text-indent:.1em; }
     #hero .name{ letter-spacing:.24em; text-indent:.24em; }
     .cine-count{ bottom:18%; }
     #finale .love{ letter-spacing:.12em; text-indent:.12em; }
@@ -216,9 +324,34 @@
     <div class="love gold" id="loveText">STAY.</div>
     <div class="love-jp" id="loveJp"></div>
     <div class="sign" id="signText"></div>
+  </section>
+
+  <section id="bookshelf">
+    <div class="shelf-kicker">a library of years</div>
+    <div class="bookcase">
+      <div class="shelf"><div class="books" id="books1"></div><div class="plank"></div></div>
+      <div class="shelf"><div class="books" id="books2"></div><div class="plank"></div></div>
+    </div>
+    <div class="tap-hint" id="tapHint">✦ 2026 の本にふれて</div>
+    <div class="shelf-caption" id="shelfCaption">
+      <div class="sc-en">another volume, added to your story.</div>
+      <div class="sc-jp">また一冊、あなたの物語に。</div>
+    </div>
     <button id="replay">REPLAY ↺</button>
   </section>
 </main>
+
+<div id="openbook" class="ob" aria-hidden="true">
+  <div class="ob-book">
+    <div class="ob-page left"></div>
+    <div class="ob-page right"></div>
+    <div class="ob-write">
+      <div class="ob-review" id="obReview"></div>
+      <div class="ob-inscribe" id="obInscribe"></div>
+    </div>
+    <div class="ob-cover"><span>2026</span></div>
+  </div>
+</div>
 
 <canvas id="confetti"></canvas>
 
@@ -230,27 +363,45 @@
 {
   "name": "NATSUMI",
   "age": 42,
+  "birthYear": 1984,
+  "year": 2026,
+  "milestones": {
+    "1984": "誕生",
+    "1991": "小学校入学",
+    "1997": "中学校入学",
+    "2000": "高校入学",
+    "2003": "高校卒業",
+    "2004": "成人"
+  },
   "dateLabel": "2026 · 06 · 07",
   "love": "STAY.",
   "loveJp": "ずっと、隣にいて。",
+  "inscription": "人生の続きを。",
   "sign": "for NATSUMI — 2026.06.07",
   "sound": true,
 
   "themes": {
     "N": { "concept":"NOCTURNE", "tag":"a sky made just for you",
-      "words":["Some stars appear only once in a lifetime.","And then — there is you.","Happy 42nd Birthday, Natsumi.","Let's keep drawing our constellation."] },
+      "words":["Some stars appear only once in a lifetime.","And then — there is you.","Happy 42nd Birthday, Natsumi.","Let's keep drawing our constellation."],
+      "wordsJa":["一生に一度だけ現れる星がある。","そして——君がいる。","42歳の誕生日おめでとう、なつみ。","これからも二人の星座を描いていこう。"] },
     "A": { "concept":"AURORA", "tag":"rare light, only yours",
-      "words":["Rare. Radiant. Impossible to look away from.","That is you, every single day.","Happy 42nd Birthday.","Light up the year ahead — I'll be right here."] },
+      "words":["Rare. Radiant. Impossible to look away from.","That is you, every single day.","Happy 42nd Birthday.","Light up the year ahead — I'll be right here."],
+      "wordsJa":["稀有で、輝いていて、目を離せない。","それが君だ、毎日ずっと。","42歳の誕生日おめでとう。","これからの一年を照らして。僕はすぐそばにいる。"] },
     "T": { "concept":"TIMELESS", "tag":"every chapter, with you",
-      "words":["Forty-two chapters,","and my favorite is the one with you.","Happy 42nd Birthday, Natsumi.","Let's write something new on the blank pages ahead."] },
+      "words":["Forty-two chapters,","and my favorite is the one with you.","Happy 42nd Birthday, Natsumi.","Let's write something new on the blank pages ahead."],
+      "wordsJa":["42の章、","そのお気に入りは、君がいる章。","42歳の誕生日おめでとう、なつみ。","まだ書かれていないページに、新しく。"] },
     "S": { "concept":"STARLIGHT", "tag":"tonight, the sky is yours",
-      "words":["Tonight the whole sky celebrates you.","Happy 42nd Birthday.","Shine —","and in your light, I grow stronger."] },
+      "words":["Tonight the whole sky celebrates you.","Happy 42nd Birthday.","Shine —","and in your light, I grow stronger."],
+      "wordsJa":["今夜は空のすべてが君を祝っている。","42歳の誕生日おめでとう。","輝いて——","君の光があると、俺はもっと頑張れる。"] },
     "U": { "concept":"UNIVERSE", "tag":"I'd find you in any galaxy",
-      "words":["In all the universe,","I would find you again.","Happy 42nd Birthday, Natsumi.","My gravity. And I — your home."] },
+      "words":["In all the universe,","I would find you again.","Happy 42nd Birthday, Natsumi.","My gravity. And I — your home."],
+      "wordsJa":["この宇宙のすべてのなかで、","僕はまた君を見つけるだろう。","42歳の誕生日おめでとう、なつみ。","僕の引力。そして僕が、君の帰る場所。"] },
     "M": { "concept":"MIRROR", "tag":"a reflection of someone adored",
-      "words":["Look closely.","Someone effortlessly cool —","and someone completely, endlessly loved.","Happy 42nd Birthday."] },
+      "words":["Look closely.","Someone effortlessly cool —","and someone completely, endlessly loved.","Happy 42nd Birthday."],
+      "wordsJa":["よく見て。","さりげなくカッコいい人——","そして、まるごと、果てしなく愛されている人。","42歳の誕生日おめでとう。"] },
     "I": { "concept":"ILLUMINATION", "tag":"make a wish",
-      "words":["Make a wish.","Forty-two lights — one for every reason I adore you.","Happy 42nd Birthday, Natsumi.","Stay by my side, always."] }
+      "words":["Make a wish.","Forty-two lights — one for every reason I adore you.","Happy 42nd Birthday, Natsumi.","Stay by my side, always."],
+      "wordsJa":["願いごとを。","42の灯——君を愛おしく思う理由の数だけ。","42歳の誕生日おめでとう、なつみ。","ずっと、隣にいて。"] }
   }
 }
 </script>
@@ -280,7 +431,7 @@
   const hl = (t,L)=>{ if(!t) return ''; return String(t).replace(new RegExp('('+L+')','gi'),'<span class="jade">$1</span>'); };
 
   /* 共通DOM */
-  $('#bigNum').textContent=CFG.age;
+  $('#bigNum').textContent = CFG.birthYear + '  —  ' + CFG.year;   // 1984 — 2026（人生の幅で表現）
   $('#heroName').textContent=CFG.name;
   $('#cDate').textContent=CFG.dateLabel;
   $('#loveText').textContent=CFG.love;
@@ -378,6 +529,31 @@
 
   /* ===== サウンド（やさしい和音） ===== */
   let actx=null;
+  /* 常時流れる静かなアンビエント（ファイル不要・自動生成） */
+  let ambStarted=false;
+  function startAmbient(){
+    if(ambStarted||!CFG.sound) return; ambStarted=true;
+    try{
+      actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+      if(actx.state==='suspended') actx.resume();
+      const now=actx.currentTime;
+      const master=actx.createGain(); master.gain.setValueAtTime(0.0001,now);
+      master.gain.exponentialRampToValueAtTime(0.085, now+5);   // 5秒かけてそっと立ち上げ
+      master.connect(actx.destination);
+      const filt=actx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=850; filt.Q.value=0.7; filt.connect(master);
+      const notes=[130.81,196.00,261.63,329.63];                // C3 G3 C4 E4（暖かいCメジャー）
+      notes.forEach((f,i)=>{
+        [0,4].forEach(det=>{                                    // デチューンの相方を重ねて艶を出す
+          const o=actx.createOscillator(); o.type='sine'; o.frequency.value=f; o.detune.value=det;
+          const g=actx.createGain(); g.gain.value=0.16/notes.length; o.connect(g); g.connect(filt); o.start();
+          const lfo=actx.createOscillator(); lfo.frequency.value=0.04+i*0.015;
+          const lg=actx.createGain(); lg.gain.value=g.gain.value*0.5; lfo.connect(lg); lg.connect(g.gain); lfo.start();
+        });
+      });
+      const flfo=actx.createOscillator(); flfo.frequency.value=0.025;        // ゆっくり音色が揺らぐ
+      const flg=actx.createGain(); flg.gain.value=350; flfo.connect(flg); flg.connect(filt.frequency); flfo.start();
+    }catch(e){}
+  }
   function chord(base){ if(!CFG.sound) return;
     try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
       if(actx.state==='suspended') actx.resume();   // iOS対策：操作内で起こす
@@ -479,8 +655,151 @@
 
   const finale=$('#finale'), loveText=$('#loveText'), loveJp=$('#loveJp'), signText=$('#signText'), replay=$('#replay');
   new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting){
-      loveText.classList.add('in'); loveJp.classList.add('in'); signText.classList.add('in'); replay.classList.add('in'); fireFinale();
+      loveText.classList.add('in'); loveJp.classList.add('in'); signText.classList.add('in'); fireFinale();
     }}); },{threshold:.5}).observe(finale);
+
+  /* ===== 本棚：人生の蔵書（最後の場面） ===== */
+  function buildBooks(){
+    const r1=$('#books1'), r2=$('#books2'); if(!r1||!r2) return; r1.innerHTML=''; r2.innerHTML='';
+    const start=CFG.birthYear, end=CFG.year;
+    const PAL=['#c9a227','#b8860b','#9a7b1f','#e6d28a','#8a6d3b','#5e4a1c','#d4af37','#7a5c1e','#caa75a','#403214'];
+    const WID=['w1','w1','w2','w2','w2','w3','w3','w4'];   // 細め多めに重み付け
+    const MS=CFG.milestones||{};
+    const years=[]; for(let y=start;y<=end;y++) years.push(y);
+    const mid=Math.ceil(years.length/2);                  // 上段・下段に二分
+    years.forEach((y,idx)=>{
+      const b=document.createElement('div');
+      if(y===end){ b.className='book new'; b.style.height='100%';
+        const t=document.createElement('span'); t.className='title'; t.textContent=y; b.appendChild(t);
+      } else {
+        const title=MS[String(y)];
+        if(title){
+          b.className='book milestone'; b.style.height=(86+Math.random()*14)+'%';
+          const t=document.createElement('span'); t.className='title'; t.textContent=title; b.appendChild(t);
+        } else {
+          b.className='book '+WID[(Math.random()*WID.length)|0];
+          b.style.setProperty('--c', PAL[(Math.random()*PAL.length)|0]);
+          b.style.height=(54+Math.random()*44)+'%';        // 高さを完全ランダムに
+        }
+      }
+      b.style.transitionDelay=(idx*18)+'ms';
+      (idx<mid ? r1 : r2).appendChild(b);
+    });
+  }
+  buildBooks();
+
+  /* 最新刊に書き入れる言葉（ガラスペン） */
+  function buildInscription(){
+    const w=$('#obInscribe'); if(!w) return; w.innerHTML='';
+    const lines=Array.isArray(CFG.inscription)?CFG.inscription:[CFG.inscription];
+    lines.forEach(txt=>{
+      const dur=Math.max(1800, String(txt).length*380);                // 文字数に応じた書く速さ（ゆっくり）
+      const row=document.createElement('div'); row.className='ink-row';
+      const line=document.createElement('span'); line.className='ink-line';
+      line.style.setProperty('--d',(dur/1000)+'s'); line.dataset.dur=dur;
+      const t=document.createElement('span'); t.className='ink-text'; t.textContent=txt;
+      const pen=document.createElement('span'); pen.className='pen';
+      line.appendChild(t); line.appendChild(pen); row.appendChild(line); w.appendChild(row);
+    });
+  }
+  buildInscription();
+
+  // 開いた本：1ページ＝1英文＋訳。スワイプでめくる
+  let reviewPages=[], reviewIdx=0, reviewTurning=false, reviewAutoTimer=null;
+  function clearReviewAuto(){ if(reviewAutoTimer){ clearTimeout(reviewAutoTimer); reviewAutoTimer=null; } }
+  function scheduleReviewAuto(){ clearReviewAuto(); reviewAutoTimer=setTimeout(()=>{ if(awaitingPage) nextReviewPage(); }, 7000); }
+  function buildReview(){
+    const r=$('#obReview'); if(!r) return;
+    const en=(theme&&theme.words)||[], ja=(theme&&theme.wordsJa)||[];
+    reviewPages=en.map((line,i)=>({en:line, ja:ja[i]||''}));
+    reviewIdx=0; reviewTurning=false; r.innerHTML='';
+    const content=document.createElement('div'); content.className='rv-content';
+    const leaf=document.createElement('div'); leaf.className='rv-leaf';
+    const nav=document.createElement('div'); nav.className='rv-nav';
+    r.appendChild(content); r.appendChild(leaf); r.appendChild(nav);
+    renderReviewPage();
+  }
+  function renderReviewPage(){
+    const c=$('#obReview .rv-content'); if(!c) return; c.innerHTML='';
+    const p=reviewPages[reviewIdx]; if(!p) return;
+    const e=document.createElement('div'); e.className='rv-en'; e.textContent=p.en;
+    const j=document.createElement('div'); j.className='rv-ja'; j.textContent=p.ja;
+    const n=document.createElement('div'); n.className='rv-count'; n.textContent=(reviewIdx+1)+' / '+reviewPages.length;
+    c.appendChild(e); c.appendChild(j); c.appendChild(n);
+    const nav=$('#obReview .rv-nav');
+    if(nav) nav.textContent=(reviewIdx<reviewPages.length-1)?'← スワイプでめくる':'← スワイプで、人生の続きを';
+  }
+  function nextReviewPage(){
+    if(!awaitingPage || reviewTurning) return;
+    if(reviewIdx < reviewPages.length-1){
+      reviewTurning=true; scheduleReviewAuto();
+      const leaf=$('#obReview .rv-leaf'); if(leaf){ leaf.classList.remove('turn'); void leaf.offsetWidth; leaf.classList.add('turn'); }
+      later(()=>{ reviewIdx++; renderReviewPage(); }, 400);          // めくり途中で中身を差し替え
+      later(()=>{ if(leaf) leaf.classList.remove('turn'); reviewTurning=false; }, 840);
+    } else {
+      awaitingPage=false; clearReviewAuto(); startInscribe();        // 最後のページ → 綴りへ
+    }
+  }
+  // フェーズ1：本が開き、英文＋訳が1ページずつ
+  function openReviewScene(){
+    buildReview();
+    const ob=$('#openbook'), rv=$('#obReview'), ins=$('#obInscribe');
+    rv.classList.remove('hide','in'); rv.style.display=''; ins.style.display='none';
+    document.querySelectorAll('#obInscribe .ink-line').forEach(l=>l.classList.remove('go'));
+    ob.style.display=''; ob.classList.remove('away'); ob.classList.add('show');
+    later(()=> rv.classList.add('in'), 950);                          // 本が開いてから英文＋訳が浮かぶ
+    later(()=>{ awaitingPage=true; scheduleReviewAuto(); }, 1200);    // スワイプ/タップで次へ（放置でも自動）
+  }
+  // フェーズ2：最後のページ → ガラスペンで「人生の続きを。」
+  function startInscribe(){
+    const rv=$('#obReview'), ins=$('#obInscribe');
+    clearReviewAuto(); rv.classList.add('hide');
+    later(()=>{ rv.style.display='none'; ins.style.display='flex'; runInscribe(); }, 700);
+  }
+  function runInscribe(){
+    const ob=$('#openbook');
+    const lines=[...document.querySelectorAll('#obInscribe .ink-line')];
+    let t=300; lines.forEach(l=>{ const d=+l.dataset.dur; later(()=>l.classList.add('go'), t); t+=d+350; });
+    const writeEnd=t+250;
+    later(()=> ob.classList.add('away'), writeEnd);                     // 本を閉じて棚へ
+    later(()=>{ ob.classList.remove('show');
+                const nb=$('.book.new'); if(nb) nb.classList.remove('await');
+                addBurst(innerWidth/2, innerHeight*0.55); if(!running){ running=true; confLoop(); } }, writeEnd+1000);
+    later(()=>{ ob.style.display='none'; ob.classList.remove('away'); }, writeEnd+1900);
+    later(()=> $('#shelfCaption').classList.add('in'), writeEnd+2000);
+    later(()=> replay.classList.add('in'), writeEnd+2600);
+    later(()=> unfreezeScroll(), writeEnd+2700);                          // 儀式が終わったらスクロール解放
+  }
+
+  let shelfDone=false, frozenY=0, awaitingTap=false, awaitingPage=false;
+  function freezeScroll(){ frozenY=window.scrollY; const b=document.body;
+    b.style.position='fixed'; b.style.top=(-frozenY)+'px'; b.style.left='0'; b.style.right='0'; b.style.width='100%'; }
+  function unfreezeScroll(){ const b=document.body; b.style.position=''; b.style.top=''; b.style.left=''; b.style.right=''; b.style.width=''; window.scrollTo(0,frozenY); }
+  function triggerWriting(){ if(!awaitingTap) return; awaitingTap=false;
+    const nb=$('.book.new'); if(nb) nb.classList.remove('await'); $('#tapHint').classList.remove('in');
+    openReviewScene(); }                                  // まず英文＋訳のページを開く
+  // 2026の本（とヒント）をタップで本が開く／開いた本にふれると綴りへ
+  (function armBookTap(){
+    const nb=$('.book.new'), hint=$('#tapHint'), ob=$('#openbook');
+    if(nb)   nb.addEventListener('click', triggerWriting);
+    if(hint) hint.addEventListener('click', triggerWriting);
+    if(ob){                                                 // 開いた本：タップ／左スワイプでめくる
+      ob.addEventListener('click', ()=> nextReviewPage());
+      let sx=0;
+      ob.addEventListener('touchstart', e=>{ sx=e.changedTouches[0].clientX; }, {passive:true});
+      ob.addEventListener('touchend',  e=>{ if(e.changedTouches[0].clientX - sx < -35) nextReviewPage(); }, {passive:true});
+    }
+  })();
+  new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting && !shelfDone){ shelfDone=true;
+      $('#bookshelf').scrollIntoView({behavior:'smooth', block:'start'});  // 本棚を画面いっぱいに合わせる
+      later(()=>{ freezeScroll();                                          // スクロールを固定（見逃し防止）
+        document.querySelectorAll('.books').forEach(b=>b.classList.add('rise')); // 既刊が立ち上がる
+        later(()=>{ const nb=$('.book.new'); if(nb) nb.classList.add('reveal'); }, 2600);   // 2026が棚に現れる
+        later(()=>{ const nb=$('.book.new'); if(nb) nb.classList.add('await');             // 「ふれて」と促す
+                    $('#tapHint').classList.add('in'); awaitingTap=true; }, 3900);
+        later(()=>{ triggerWriting(); }, 11000);                          // タップが無ければ自動発動（見逃し防止）
+      }, 750);
+    }}); },{threshold:.45}).observe($('#bookshelf'));
 
   addEventListener('scroll',()=>{ if(scrollY>40){ const h=$('#scrollHint'); if(h) h.style.opacity=0; } },{passive:true});
 
@@ -521,6 +840,16 @@
     clearTimers(); fired=false; started=false; conf=[];
     document.querySelectorAll('.in').forEach(e=>e.classList.remove('in'));
     main.classList.remove('reveal'); main.setAttribute('aria-hidden','true');
+    // 本棚リセット
+    shelfDone=false; awaitingTap=false; document.querySelectorAll('.books').forEach(b=>b.classList.remove('rise'));
+    document.querySelectorAll('.book.new').forEach(b=>b.classList.remove('reveal','await'));
+    $('#tapHint').classList.remove('in');
+    // 書き入れ場面リセット
+    const ob=$('#openbook'); ob.classList.remove('show','away'); ob.style.display='';
+    awaitingPage=false; reviewTurning=false; clearReviewAuto();
+    $('#obReview').classList.remove('in','hide'); $('#obInscribe').style.display='none';
+    document.querySelectorAll('.ink-line').forEach(l=>l.classList.remove('go'));
+    document.body.style.position=''; document.body.style.top=''; document.body.style.left=''; document.body.style.right=''; document.body.style.width='';
     bodyEl.classList.add('locked');
     cinema.style.display=''; cinema.classList.remove('fade','show');
     $('#cDate').classList.remove('fade-io'); $('#cConcept').classList.remove('fade-io');
