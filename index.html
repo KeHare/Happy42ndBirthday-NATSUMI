@@ -400,7 +400,7 @@
     SEC=theme.sec; document.documentElement.style.setProperty('--sec',SEC);
     const L=letter;
     // cinema concept（扉名はそのまま金、副題はタップ文字を翡翠に）
-    $('#cConcept .cc-name').textContent=theme.concept;
+    $('#cConcept .cc-name').innerHTML=hl(theme.concept,L);   // 世界名のタップ文字も翡翠に
     $('#cConcept .cc-tag').innerHTML=hl(theme.tag,L);
     $('#kicker').innerHTML=hl(theme.tag,L);
     // hero の NATSUMI と I LOVE YOU もタップ文字を翡翠に
