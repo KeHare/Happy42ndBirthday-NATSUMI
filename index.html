@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>For NATSUMI — Happy 42nd Birthday</title>
+
+<!-- ============================================================
+     N A T S U M I の7文字 = 7つの扉。
+     円の中で光っている文字の瞬間にタップすると、
+     その文字の世界（演出・色・メッセージ）に分岐します。
+
+     編集する場所は下の <script id="CONFIG"> の中だけでOK。
+     名前・日付・各扉のメッセージはそこで書き換えられます。
+     ============================================================ -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --gold:        #d4af37;
+    --gold-bright: #f7e7a6;
+    --gold-deep:   #9a7b1f;
+    --sec:         #f7e7a6;       /* 扉ごとに切り替わる第2アクセント */
+    --bg:          #050505;
+    --ink:         #f4efe3;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+  html,body{ background:var(--bg); color:var(--ink); overscroll-behavior:none; }
+  body{
+    font-family:"Jost","Cormorant Garamond",serif;
+    overflow-x:hidden; -webkit-font-smoothing:antialiased; letter-spacing:.02em;
+    -webkit-tap-highlight-color:transparent; text-rendering:optimizeLegibility;
+  }
+  body.locked{ overflow:hidden; height:100vh; height:100svh; touch-action:none; }
+
+  .gold{
+    background:linear-gradient(100deg,var(--gold-deep) 0%,var(--gold) 22%,var(--gold-bright) 42%,
+      #fffbe9 50%,var(--gold-bright) 58%,var(--gold) 78%,var(--gold-deep) 100%);
+    background-size:250% 100%;
+    -webkit-background-clip:text; background-clip:text;
+    -webkit-text-fill-color:transparent; color:transparent;
+    animation:shimmer 7s linear infinite;
+  }
+  @keyframes shimmer{ to{ background-position:250% 0; } }
+
+  /* タップした文字＝翡翠色（どの扉を選んだかの印） */
+  .jade, .jade *{ color:#34d6b4 !important; -webkit-text-fill-color:#34d6b4 !important; text-shadow:0 0 16px rgba(52,214,180,.55); }
+
+  /* 背景キャンバス */
+  #bg{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+
+  /* ===== TAP TO BEGIN ===== */
+  #gate{
+    position:fixed; inset:0; z-index:90;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 50% 50%, #0a0908 0%, #000 80%);
+    cursor:pointer; transition:opacity 1.6s ease; text-align:center; padding:6vw;
+  }
+  #gate.gone{ opacity:0; pointer-events:none; }
+  #gate .ring{
+    width:clamp(120px,18vw,180px); height:clamp(120px,18vw,180px);
+    border:1px solid rgba(212,175,55,.35); border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:5vh; position:relative; animation:breathe 3.4s ease-in-out infinite;
+  }
+  #gate .ring::before{
+    content:""; position:absolute; inset:-1px; border-radius:50%;
+    border:1px solid transparent; border-top-color:var(--gold);
+    animation:spin 5s linear infinite; opacity:.7;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @keyframes breathe{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.06);} }
+  #gate .ring span{ font-family:"Cinzel"; font-size:clamp(2.2rem,8vw,3.6rem); transition:opacity .22s ease, transform .22s ease; }
+  #gate .tap{ font-family:"Cinzel"; letter-spacing:.55em; text-indent:.55em; font-size:clamp(.7rem,2.6vw,1rem); color:var(--gold-bright); animation:pulse 2.6s ease-in-out infinite; }
+  #gate .sub{ margin-top:2.2vh; font-family:"Cormorant Garamond"; font-style:italic; font-size:clamp(.8rem,3vw,1.05rem); color:rgba(244,239,227,.42); letter-spacing:.1em; max-width:24em; }
+  @keyframes pulse{ 0%,100%{ opacity:.4;} 50%{ opacity:1;} }
+
+  /* ===== シネマティック導入 ===== */
+  #cinema{ position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center; background:#000; text-align:center; padding:6vw; }
+  #cinema.show{ display:flex; }
+  #cinema.fade{ animation:cinemaOut .3s ease forwards; }
+  @keyframes cinemaOut{ to{ opacity:0; visibility:hidden; } }
+  .cine-line{ position:absolute; opacity:0; width:90%; }
+  .cine-date{ font-family:"Cinzel"; letter-spacing:.5em; text-indent:.5em; font-size:clamp(.85rem,3.4vw,1.5rem); }
+  #cConcept{ display:flex; flex-direction:column; gap:1.4vh; }
+  .cc-name{ font-family:"Cinzel"; font-weight:600; letter-spacing:.34em; text-indent:.34em; font-size:clamp(1.4rem,6vw,3rem); }
+  .cc-tag{ font-family:"Cormorant Garamond"; font-style:italic; font-size:clamp(1rem,3.6vw,1.5rem); color:rgba(244,239,227,.6); }
+  .fade-io{ animation:fadeIO 3s ease forwards; }
+  .fade-io-long{ animation:fadeIO 3.8s ease forwards; }   /* 世界名は読めるよう長めに */
+  @keyframes fadeIO{ 0%{opacity:0;transform:translateY(14px);} 22%,72%{opacity:1;transform:none;} 100%{opacity:0;transform:translateY(-14px);} }
+
+  .cine-name{ font-family:"Cinzel"; font-weight:600; font-size:clamp(2.6rem,13vw,8rem); letter-spacing:.06em; color:var(--gold); text-shadow:0 0 36px var(--sec); opacity:0; }
+  .cine-name.go{ opacity:1; }
+  .cine-name span{ display:inline-block; opacity:0; }
+
+  .cine-count{ position:absolute; bottom:15%; left:0; width:100%; font-family:"Cinzel"; font-weight:600; font-size:clamp(2.4rem,10vw,5rem); color:var(--gold); text-shadow:0 0 34px var(--sec); opacity:0; pointer-events:none; transition:opacity .3s ease; }
+  .cine-count.tick{ animation:countPop .9s ease; }
+  @keyframes countPop{ 0%{opacity:0;transform:scale(1.22);} 20%{opacity:1;transform:scale(1);} 72%{opacity:1;transform:scale(1);} 100%{opacity:0;transform:scale(.92);} }
+
+  /* 7種の名前リビール */
+  .anim-glow span{ animation:a-glow 1.6s ease forwards; }
+  @keyframes a-glow{ 0%{opacity:0;filter:blur(16px);transform:scale(1.12);} 100%{opacity:1;filter:blur(0);transform:none;} }
+  .anim-type span{ animation:a-type .01s steps(1) forwards; }
+  @keyframes a-type{ to{opacity:1;} }
+  .anim-pop span{ animation:a-pop .9s cubic-bezier(.2,1.5,.4,1) forwards; }
+  @keyframes a-pop{ 0%{opacity:0;transform:scale(0) rotate(-18deg);} 100%{opacity:1;transform:none;} }
+  .anim-zoom span{ animation:a-zoom 1.4s ease forwards; }
+  @keyframes a-zoom{ 0%{opacity:0;transform:scale(3.4);filter:blur(22px);} 60%{opacity:1;} 100%{opacity:1;transform:none;filter:none;} }
+  .anim-split span{ animation:a-split 1.2s ease forwards; transform-origin:center; }
+  @keyframes a-split{ 0%{opacity:0;transform:scaleY(0) translateY(.4em);} 100%{opacity:1;transform:none;} }
+  .anim-light span{ animation:a-light 1s ease forwards; }
+  @keyframes a-light{ 0%{opacity:0;filter:brightness(.2) blur(3px);} 100%{opacity:1;filter:none;} }
+  .anim-converge span{ animation:a-cvg 1.2s ease forwards; }
+  @keyframes a-cvg{ 0%{opacity:0;transform:translate(var(--dx,0),-50px) scale(1.7);filter:blur(6px);} 100%{opacity:1;transform:none;filter:none;} }
+
+  /* ===== 本編 ===== */
+  main{ position:relative; z-index:10; opacity:0; }     /* 着地までは隠す（42のチラ見え防止） */
+  main.reveal{ opacity:1; transition:opacity .6s ease; }
+  section{ min-height:100vh; min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:12vh 7vw; text-align:center; }
+  #hero{ gap:3vh; }
+  #hero .kicker{ font-family:"Cinzel"; letter-spacing:.42em; text-indent:.42em; font-size:clamp(.6rem,2.4vw,.95rem); color:rgba(244,239,227,.62); }
+  #hero h1{ font-family:"Cinzel"; font-weight:700; line-height:1; font-size:clamp(3.4rem,22vw,13rem); letter-spacing:.05em; text-shadow:0 0 45px var(--sec); }
+  #hero .name{ font-family:"Cinzel"; font-weight:500; letter-spacing:.32em; text-indent:.32em; font-size:clamp(1rem,4.4vw,2rem); }
+  .divider{ width:1px; height:9vh; background:linear-gradient(var(--sec),transparent); margin-top:2vh; opacity:.7; }
+  .scroll-hint{ font-family:"Cormorant Garamond"; font-style:italic; font-size:.9rem; color:rgba(244,239,227,.4); margin-top:1.5vh; animation:pulse 2.6s ease-in-out infinite; }
+
+  .word{ font-family:"Cormorant Garamond"; font-style:italic; font-weight:400; font-size:clamp(1.5rem,6.2vw,3.4rem); line-height:1.6; max-width:16em; letter-spacing:.03em; opacity:0; transform:translateY(40px); transition:opacity 1.4s ease, transform 1.4s ease; filter:blur(4px); }
+  .word.in{ opacity:1; transform:none; filter:none; }
+
+  #finale{ gap:4vh; }
+  #finale .love{ font-family:"Cinzel"; font-weight:700; letter-spacing:.18em; text-indent:.18em; font-size:clamp(2rem,11vw,6rem); line-height:1.1; opacity:0; transform:scale(.9); transition:opacity 1.8s ease, transform 1.8s ease; text-shadow:0 0 50px var(--sec); }
+  #finale .love.in{ opacity:1; transform:none; }
+  #finale .love-jp{ font-family:"Hiragino Mincho ProN","Yu Mincho","Shippori Mincho",serif; font-weight:500;
+    font-size:clamp(1.15rem,5vw,2rem); letter-spacing:.2em; text-indent:.2em; color:var(--gold-bright);
+    text-shadow:0 0 24px var(--sec); opacity:0; transform:translateY(12px);
+    transition:opacity 1.8s ease .7s, transform 1.8s ease .7s; }
+  #finale .love-jp.in{ opacity:1; transform:none; }
+  #finale .sign{ font-family:"Cormorant Garamond"; font-style:italic; font-size:clamp(1rem,4vw,1.5rem); color:rgba(244,239,227,.72); opacity:0; transition:opacity 2s ease 1s; }
+  #finale .sign.in{ opacity:1; }
+  #replay{ margin-top:3vh; background:transparent; cursor:pointer; border:1px solid var(--sec); color:var(--gold-bright); font-family:"Cinzel"; letter-spacing:.3em; text-indent:.3em; font-size:.7rem; padding:1em 2.2em; border-radius:40px; opacity:0; transition:opacity 2s ease 1.6s, background .4s; }
+  #replay.in{ opacity:1; }
+  #replay:hover{ background:rgba(212,175,55,.12); }
+  #replay{ touch-action:manipulation; }
+  .replay-note{ font-family:"Cormorant Garamond"; font-style:italic; font-size:.85rem; color:rgba(244,239,227,.4); margin-top:1.4vh; opacity:0; transition:opacity 2s ease 1.8s; }
+  .replay-note.in{ opacity:1; }
+
+  #confetti{ position:fixed; inset:0; z-index:70; pointer-events:none; }
+
+  .corner{ position:fixed; z-index:20; width:clamp(40px,8vw,90px); height:clamp(40px,8vw,90px); opacity:.5; pointer-events:none; }
+  .corner.tl{ top:22px; left:22px; border-top:1px solid var(--sec); border-left:1px solid var(--sec); }
+  .corner.tr{ top:22px; right:22px; border-top:1px solid var(--sec); border-right:1px solid var(--sec); }
+  .corner.bl{ bottom:22px; left:22px; border-bottom:1px solid var(--sec); border-left:1px solid var(--sec); }
+  .corner.br{ bottom:22px; right:22px; border-bottom:1px solid var(--sec); border-right:1px solid var(--sec); }
+  @media (max-width:540px){
+    .corner{ opacity:.28; }
+    .corner.tl{ top:14px; left:14px; }
+    .corner.tr{ top:14px; right:14px; }
+    .corner.bl{ bottom:14px; left:14px; }
+    .corner.br{ bottom:14px; right:14px; }
+    section{ padding:11vh 8vw; }
+    .cine-name{ font-size:clamp(2.2rem,15vw,4.5rem); letter-spacing:.02em; }
+    .cc-name{ letter-spacing:.22em; text-indent:.22em; }
+    .cine-date{ letter-spacing:.32em; text-indent:.32em; }
+    .word{ font-size:clamp(1.5rem,7vw,2.4rem); line-height:1.55; max-width:14em; }
+    #hero h1{ font-size:clamp(4.5rem,32vw,9rem); }
+    #hero .name{ letter-spacing:.24em; text-indent:.24em; }
+    .cine-count{ bottom:18%; }
+    #finale .love{ letter-spacing:.12em; text-indent:.12em; }
+  }
+  /* 横向き（ランドスケープ）でも縦詰まりしないように */
+  @media (max-height:520px) and (orientation:landscape){
+    section{ min-height:auto; padding:14vh 7vw; }
+    #hero{ min-height:100svh; }
+  }
+  @media (prefers-reduced-motion:reduce){ *{ animation-duration:.001s!important; } }
+</style>
+</head>
+<body class="locked">
+
+<canvas id="bg"></canvas>
+
+<div class="corner tl"></div><div class="corner tr"></div>
+<div class="corner bl"></div><div class="corner br"></div>
+
+<div id="gate">
+  <div class="ring"><span class="gold">N</span></div>
+  <div class="tap gold">TAP TO BEGIN</div>
+</div>
+
+<div id="cinema">
+  <div class="cine-line cine-date gold" id="cDate"></div>
+  <div class="cine-line" id="cConcept"><span class="cc-name gold"></span><span class="cc-tag"></span></div>
+  <div class="cine-line cine-name" id="cName"></div>
+  <div class="cine-count" id="cCount"></div>
+</div>
+
+<main id="main" aria-hidden="true">
+  <section id="hero">
+    <div class="kicker" id="kicker"></div>
+    <h1 class="gold" id="bigNum">42</h1>
+    <div class="name gold" id="heroName">NATSUMI</div>
+    <div class="divider"></div>
+    <div class="scroll-hint" id="scrollHint">scroll ↓</div>
+  </section>
+
+  <section><p class="word" data-word>　</p></section>
+  <section><p class="word" data-word>　</p></section>
+  <section><p class="word" data-word>　</p></section>
+  <section><p class="word" data-word>　</p></section>
+
+  <section id="finale">
+    <div class="love gold" id="loveText">STAY.</div>
+    <div class="love-jp" id="loveJp"></div>
+    <div class="sign" id="signText"></div>
+    <button id="replay">REPLAY ↺</button>
+  </section>
+</main>
+
+<canvas id="confetti"></canvas>
+
+<!-- ============================================================
+     ★★★ ここだけ書き換えればOK ★★★
+     themes の各文字に concept(扉名)/tag(副題)/words(言葉) があります
+     ============================================================ -->
+<script id="CONFIG" type="application/json">
+{
+  "name": "NATSUMI",
+  "age": 42,
+  "dateLabel": "2026 · 06 · 07",
+  "love": "STAY.",
+  "loveJp": "ずっと、隣にいて。",
+  "sign": "for NATSUMI — 2026.06.07",
+  "sound": true,
+
+  "themes": {
+    "N": { "concept":"NOCTURNE", "tag":"a sky made just for you",
+      "words":["Some stars appear only once in a lifetime.","And then — there is you.","Happy 42nd Birthday, Natsumi.","Let's keep drawing our constellation."] },
+    "A": { "concept":"AURORA", "tag":"rare light, only yours",
+      "words":["Rare. Radiant. Impossible to look away from.","That is you, every single day.","Happy 42nd Birthday.","Light up the year ahead — I'll be right here."] },
+    "T": { "concept":"TIMELESS", "tag":"every chapter, with you",
+      "words":["Forty-two chapters,","and my favorite is the one with you.","Happy 42nd Birthday, Natsumi.","Let's write something new on the blank pages ahead."] },
+    "S": { "concept":"STARLIGHT", "tag":"tonight, the sky is yours",
+      "words":["Tonight the whole sky celebrates you.","Happy 42nd Birthday.","Shine —","and in your light, I grow stronger."] },
+    "U": { "concept":"UNIVERSE", "tag":"I'd find you in any galaxy",
+      "words":["In all the universe,","I would find you again.","Happy 42nd Birthday, Natsumi.","My gravity. And I — your home."] },
+    "M": { "concept":"MIRROR", "tag":"a reflection of someone adored",
+      "words":["Look closely.","Someone effortlessly cool —","and someone completely, endlessly loved.","Happy 42nd Birthday."] },
+    "I": { "concept":"ILLUMINATION", "tag":"make a wish",
+      "words":["Make a wish.","Forty-two lights — one for every reason I adore you.","Happy 42nd Birthday, Natsumi.","Stay by my side, always."] }
+  }
+}
+</script>
+
+<script>
+(()=>{
+  "use strict";
+  const CFG = JSON.parse(document.getElementById('CONFIG').textContent);
+  const $ = s => document.querySelector(s);
+  const GOLD = '#d4af37';
+  let SEC = '#f7e7a6';
+
+  /* 各扉の演出パラメータ（見た目エンジンは固定。文字はCONFIGで編集） */
+  const ENGINE = {
+    N:{ sec:"#cfe0ff", bg:"stars",   nameAnim:"converge", stagger:90,  finale:"fireworks" },
+    A:{ sec:"#7ef0c8", bg:"aurora",  nameAnim:"glow",     stagger:70,  finale:"embers"    },
+    T:{ sec:"#e8c879", bg:"dust",    nameAnim:"type",     stagger:150, finale:"confetti"  },
+    S:{ sec:"#ffd9a8", bg:"sparkle", nameAnim:"pop",      stagger:85,  finale:"fireworks" },
+    U:{ sec:"#b7a6ff", bg:"orbit",   nameAnim:"zoom",     stagger:70,  finale:"fireworks" },
+    M:{ sec:"#e6b3a0", bg:"mirror",  nameAnim:"split",    stagger:70,  finale:"confetti"  },
+    I:{ sec:"#ffba6b", bg:"candle",  nameAnim:"light",    stagger:175, finale:"embers"    }
+  };
+  const ord = n => { const s=["th","st","nd","rd"],v=n%100; return s[(v-20)%10]||s[v]||s[0]; };
+  const rgba = (hex,a)=>{ hex=hex.replace('#',''); if(hex.length===3) hex=hex.split('').map(c=>c+c).join('');
+    const n=parseInt(hex,16); return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`; };
+  // タップした文字Lを翡翠spanで包む（英文中の同じ文字も対象）
+  const hl = (t,L)=>{ if(!t) return ''; return String(t).replace(new RegExp('('+L+')','gi'),'<span class="jade">$1</span>'); };
+
+  /* 共通DOM */
+  $('#bigNum').textContent=CFG.age;
+  $('#heroName').textContent=CFG.name;
+  $('#cDate').textContent=CFG.dateLabel;
+  $('#loveText').textContent=CFG.love;
+  $('#signText').textContent=CFG.sign;
+
+  /* ===== リングの文字を巡回 ===== */
+  const ringSpan=$('.ring span');
+  const ringLetters=(CFG.name||"N").toUpperCase().replace(/[^A-Z]/g,'').split('');
+  let _li=0; ringSpan.textContent=ringLetters[0];
+  setInterval(()=>{
+    if(started) return;
+    ringSpan.style.opacity=0; ringSpan.style.transform='scale(.7)';
+    setTimeout(()=>{ _li=(_li+1)%ringLetters.length; ringSpan.textContent=ringLetters[_li];
+      ringSpan.style.opacity=1; ringSpan.style.transform='scale(1)'; },220);
+  },760);
+
+  /* ===== 背景キャンバス ===== */
+  const bg=$('#bg'), bctx=bg.getContext('2d');
+  let W,H,dpr=Math.min(devicePixelRatio||1,2), BG='dust', E={};
+  function sizeBG(){ W=innerWidth; H=innerHeight; bg.width=W*dpr; bg.height=H*dpr;
+    bg.style.width=W+'px'; bg.style.height=H+'px'; bctx.setTransform(dpr,0,0,dpr,0,0); }
+  function initBG(name){
+    BG=name; E={};
+    if(name==='dust'){ E.p=Array.from({length:Math.min(80,(W/14)|0)},()=>({x:Math.random()*W,y:Math.random()*H,r:.4+Math.random()*1.6,a:.05+Math.random()*.5,vy:.1+Math.random()*.5,ph:Math.random()*6.3,va:.005+Math.random()*.02})); }
+    if(name==='stars'){ const N=Math.min(150,((W*H)/8500)|0);
+      E.stars=Array.from({length:N},()=>({x:Math.random()*W,y:Math.random()*H,r:.4+Math.random()*1.8,base:.3+Math.random()*.6,ph:Math.random()*6.3,sp:.5+Math.random()*1.5,gold:Math.random()<.4}));
+      E.bright=[]; for(let i=0;i<E.stars.length&&E.bright.length<16;i++) if(E.stars[i].r>1.4) E.bright.push(i);
+      E.shoot=[]; E.nextShoot=1; }
+    if(name==='aurora'){ E.rib=Array.from({length:4},(_,i)=>({cx:.18+i*.21+Math.random()*.06,amp:40+Math.random()*70,freq:.004+Math.random()*.004,sp:.3+Math.random()*.5,phase:Math.random()*6.3,w:60+Math.random()*70,a:.05+Math.random()*.06,col:i%2?SEC:GOLD})); }
+    if(name==='sparkle'){ E.sp=[]; E.p=Array.from({length:40},()=>({x:Math.random()*W,y:Math.random()*H,r:.4+Math.random()*1.2,a:.05+Math.random()*.35,vy:.05+Math.random()*.3,ph:Math.random()*6.3,va:.005+Math.random()*.02})); }
+    if(name==='orbit'){ E.o=Array.from({length:70},()=>{ const r=40+Math.random()*Math.min(W,H)*.42; return {r,ang:Math.random()*6.3,sp:(Math.random()<.5?1:-1)*(.002+Math.random()*.006),size:.6+Math.random()*2.2,a:.3+Math.random()*.5,col:Math.random()<.5?GOLD:SEC}; }); }
+    if(name==='mirror'){ E.m=Array.from({length:30},()=>({x:Math.random()*W/2,y:Math.random()*H/2,vx:(Math.random()-.5)*1.1,vy:(Math.random()-.5)*1.1,r:1+Math.random()*2.4,a:.4+Math.random()*.4,col:Math.random()<.5?GOLD:SEC})); }
+    if(name==='candle'){ E.em=[]; }
+  }
+  function drawBG(){
+    bctx.clearRect(0,0,W,H);
+    if(BG==='dust'||BG==='sparkle'){ for(const p of E.p){ p.ph+=p.va; p.y-=p.vy; if(p.y<-5){p.y=H+5;p.x=Math.random()*W;}
+      const tw=p.a*(.6+.4*Math.sin(p.ph)); bctx.beginPath(); bctx.arc(p.x,p.y,p.r,0,6.283);
+      bctx.fillStyle=rgba(GOLD,tw); bctx.shadowBlur=8; bctx.shadowColor=rgba(SEC,.6); bctx.fill(); } bctx.shadowBlur=0; }
+
+    if(BG==='stars'){ const s=E;
+      for(const st of s.stars){ const tw=st.base*(.5+.5*Math.sin(perf*st.sp+st.ph));
+        bctx.beginPath(); bctx.arc(st.x,st.y,st.r,0,6.283); bctx.fillStyle=rgba(st.gold?GOLD:SEC,tw);
+        bctx.shadowBlur=6; bctx.shadowColor=rgba(SEC,.8); bctx.fill(); } bctx.shadowBlur=0;
+      bctx.lineWidth=.6;
+      for(let i=0;i<s.bright.length;i++)for(let j=i+1;j<s.bright.length;j++){ const a=s.stars[s.bright[i]],b=s.stars[s.bright[j]];
+        const d=Math.hypot(a.x-b.x,a.y-b.y); if(d<175){ bctx.strokeStyle=rgba(GOLD,(1-d/175)*.16);
+        bctx.beginPath(); bctx.moveTo(a.x,a.y); bctx.lineTo(b.x,b.y); bctx.stroke(); } }
+      if(perf>s.nextShoot){ s.nextShoot=perf+1.4+Math.random()*3.2; s.shoot.push({x:Math.random()*W*.8,y:Math.random()*H*.3,vx:7+Math.random()*4,vy:3+Math.random()*2,life:1}); }
+      for(const sh of s.shoot){ sh.x+=sh.vx; sh.y+=sh.vy; sh.life-=.02;
+        bctx.strokeStyle=rgba('#ffffff',Math.max(0,sh.life)); bctx.lineWidth=2;
+        bctx.beginPath(); bctx.moveTo(sh.x,sh.y); bctx.lineTo(sh.x-sh.vx*8,sh.y-sh.vy*8); bctx.stroke(); }
+      s.shoot=s.shoot.filter(o=>o.life>0&&o.x<W+60&&o.y<H+60); }
+
+    if(BG==='aurora'){ bctx.globalCompositeOperation='lighter';
+      for(const r of E.rib){ bctx.lineWidth=r.w;
+        const g=bctx.createLinearGradient(0,0,0,H); g.addColorStop(0,rgba(r.col,0)); g.addColorStop(.5,rgba(r.col,r.a)); g.addColorStop(1,rgba(r.col,0));
+        bctx.strokeStyle=g; bctx.beginPath();
+        for(let y=0;y<=H;y+=16){ const x=r.cx*W+Math.sin(y*r.freq+perf*r.sp+r.phase)*r.amp; y===0?bctx.moveTo(x,y):bctx.lineTo(x,y); }
+        bctx.stroke(); } bctx.globalCompositeOperation='source-over'; }
+
+    if(BG==='sparkle'){ if(Math.random()<.09) E.sp.push({x:Math.random()*W,y:Math.random()*H,m:7+Math.random()*16,life:0,c:Math.random()<.5?GOLD:SEC});
+      for(const k of E.sp){ k.life+=.045; const p=Math.sin(Math.min(k.life,Math.PI)); const s=k.m*p;
+        bctx.save(); bctx.translate(k.x,k.y); bctx.strokeStyle=rgba(k.c,p); bctx.lineWidth=1.2; bctx.shadowBlur=8; bctx.shadowColor=rgba(k.c,p);
+        bctx.beginPath(); bctx.moveTo(-s,0);bctx.lineTo(s,0);bctx.moveTo(0,-s);bctx.lineTo(0,s);
+        bctx.moveTo(-s*.4,-s*.4);bctx.lineTo(s*.4,s*.4);bctx.moveTo(s*.4,-s*.4);bctx.lineTo(-s*.4,s*.4);
+        bctx.stroke(); bctx.restore(); }
+      E.sp=E.sp.filter(k=>k.life<Math.PI); bctx.shadowBlur=0; }
+
+    if(BG==='orbit'){ const cx=W/2,cy=H/2;
+      const g=bctx.createRadialGradient(cx,cy,0,cx,cy,Math.min(W,H)*.42); g.addColorStop(0,rgba(SEC,.12)); g.addColorStop(1,rgba(SEC,0));
+      bctx.fillStyle=g; bctx.fillRect(0,0,W,H);
+      for(const o of E.o){ o.ang+=o.sp; const x=cx+Math.cos(o.ang)*o.r, y=cy+Math.sin(o.ang)*o.r*.5;
+        bctx.beginPath(); bctx.arc(x,y,o.size,0,6.283); bctx.fillStyle=rgba(o.col,o.a);
+        bctx.shadowBlur=8; bctx.shadowColor=rgba(o.col,.8); bctx.fill(); } bctx.shadowBlur=0; }
+
+    if(BG==='mirror'){ const cx=W/2,cy=H/2;
+      for(const m of E.m){ m.x+=m.vx; m.y+=m.vy; if(m.x<0||m.x>cx)m.vx*=-1; if(m.y<0||m.y>cy)m.vy*=-1;
+        const pts=[[m.x,m.y],[W-m.x,m.y],[m.x,H-m.y],[W-m.x,H-m.y]];
+        for(const pt of pts){ bctx.beginPath(); bctx.arc(pt[0],pt[1],m.r,0,6.283); bctx.fillStyle=rgba(m.col,m.a);
+          bctx.shadowBlur=6; bctx.shadowColor=rgba(m.col,.7); bctx.fill(); } } bctx.shadowBlur=0; }
+
+    if(BG==='candle'){ const g=bctx.createLinearGradient(0,H,0,H*.5); g.addColorStop(0,rgba(SEC,.2)); g.addColorStop(1,rgba(SEC,0));
+      bctx.fillStyle=g; bctx.fillRect(0,0,W,H);
+      if(Math.random()<.45) E.em.push({x:Math.random()*W,y:H+5,vy:.4+Math.random()*1.3,r:1+Math.random()*2.4,a:.6+Math.random()*.4,ph:Math.random()*6.3,w:Math.random()<.3});
+      for(const e of E.em){ e.y-=e.vy; e.x+=Math.sin(e.y*.02+e.ph)*.6; e.a-=.004;
+        bctx.beginPath(); bctx.arc(e.x,e.y,e.r,0,6.283); bctx.fillStyle=rgba(e.w?'#fff1c0':SEC,Math.max(0,e.a));
+        bctx.shadowBlur=10; bctx.shadowColor=rgba(SEC,.9); bctx.fill(); } bctx.shadowBlur=0;
+      E.em=E.em.filter(e=>e.a>0&&e.y>-10); }
+  }
+  let perf=0;
+  function bgLoop(ts){ perf=ts*.001; drawBG(); requestAnimationFrame(bgLoop); }
+  sizeBG(); initBG('dust'); requestAnimationFrame(bgLoop);
+  addEventListener('resize',()=>{ sizeBG(); initBG(BG); });
+
+  /* ===== サウンド（やさしい和音） ===== */
+  let actx=null;
+  function chord(base){ if(!CFG.sound) return;
+    try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      if(actx.state==='suspended') actx.resume();   // iOS対策：操作内で起こす
+      const now=actx.currentTime, notes=base||[392,493.88,587.33,783.99];
+      const master=actx.createGain(); master.connect(actx.destination);
+      master.gain.setValueAtTime(.0001,now);
+      master.gain.exponentialRampToValueAtTime(.12,now+.8);
+      master.gain.exponentialRampToValueAtTime(.0001,now+6);
+      notes.forEach((f,i)=>{ const o=actx.createOscillator(),g=actx.createGain(); o.type='sine'; o.frequency.value=f; g.gain.value=.25;
+        o.connect(g); g.connect(master); o.start(now+i*.18); o.stop(now+6); });
+    }catch(e){}
+  }
+
+  /* ===== テーマ適用 ===== */
+  let theme=null;
+  function applyTheme(letter){
+    const eng=ENGINE[letter]||ENGINE.N;
+    const txt=(CFG.themes&&CFG.themes[letter])||CFG.themes.N;
+    theme={...eng,...txt,letter};
+    SEC=theme.sec; document.documentElement.style.setProperty('--sec',SEC);
+    const L=letter;
+    // cinema concept（扉名はそのまま金、副題はタップ文字を翡翠に）
+    $('#cConcept .cc-name').textContent=theme.concept;
+    $('#cConcept .cc-tag').innerHTML=hl(theme.tag,L);
+    $('#kicker').innerHTML=hl(theme.tag,L);
+    // hero の NATSUMI と I LOVE YOU もタップ文字を翡翠に
+    $('#heroName').innerHTML=hl(CFG.name,L);
+    $('#loveText').innerHTML=hl(CFG.love,L);
+    $('#loveJp').textContent=CFG.loveJp||'';
+    $('#signText').innerHTML=hl(CFG.sign,L);
+    // words（英文中の同じ文字をすべて翡翠に）
+    wordEls.forEach((el,i)=>{ const w=theme.words[i]; el.innerHTML=w?hl(w,L):""; el.classList.remove('in');
+      el.closest('section').style.display = w? '' : 'none'; });
+    initBG(theme.bg);
+  }
+
+  const wordEls=[...document.querySelectorAll('[data-word]')];
+
+  /* ===== 名前リビール ===== */
+  function revealName(animClass,stagger){
+    const c=$('#cName'); c.className='cine-line cine-name'; c.innerHTML='';
+    CFG.name.split('').forEach((ch,i)=>{ const s=document.createElement('span');
+      s.textContent = ch===' '?' ':ch; s.style.animationDelay=(i*stagger)+'ms';
+      if(animClass==='converge') s.style.setProperty('--dx',(i%2?80:-80)+'px');
+      if(theme && ch.toUpperCase()===theme.letter) s.classList.add('jade');  // タップした文字を翡翠に
+      c.appendChild(s); });
+    void c.offsetWidth; c.classList.add('go','anim-'+animClass);
+  }
+
+  /* ===== 開始 ===== */
+  const gate=$('#gate'), cinema=$('#cinema'), main=$('#main'), bodyEl=document.body;
+  let started=false, cinemaTimers=[];
+  function clearTimers(){ cinemaTimers.forEach(clearTimeout); cinemaTimers=[]; }
+  const later=(fn,t)=>cinemaTimers.push(setTimeout(fn,t));
+
+  function begin(){
+    if(started) return; started=true;
+    const letter=ringLetters[_li];
+    applyTheme(letter);
+    chord();
+    gate.classList.add('gone');
+    later(()=>{ gate.style.display='none'; runCinema(); },1500);
+  }
+  gate.addEventListener('click',begin);
+  gate.addEventListener('touchstart',e=>{ e.preventDefault(); begin(); },{passive:false});
+
+  function runCinema(){
+    cinema.classList.add('show');
+    // それぞれ約2.6秒間隔で、品よく順番に。fade-ioは3秒かけて出て消える。
+    // 各表示は前のが完全に消えてから（間に黒の余白）出す＝重なり防止
+    later(()=>$('#cDate').classList.add('fade-io'),       300); // 日付（〜3.3秒で消える）
+    later(()=>$('#cConcept').classList.add('fade-io-long'),3400);// 世界名＋副題（〜7.2秒で消える）
+    later(()=>revealName(theme.nameAnim,theme.stagger),   7300);// NATSUMI（世界名が消えてから登場）
+    later(()=>runCountdown(endCinema),                    9600);// 名前が出揃ってからカウント
+  }
+  function runCountdown(done){
+    const el=$('#cCount'); let n=5;
+    const tick=()=>{
+      el.textContent=n; el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+      if(n===1){
+        later(()=>{ el.classList.remove('tick'); el.style.opacity='0'; }, 450); // 「1」を見せてから消す
+        later(done, 800);                           // カウント間隔と同じ0.8秒の間を置いて遷移
+        return;
+      }
+      n--; later(tick,800);                        // 5→4→3→2→1 各0.8秒
+    };
+    tick();
+  }
+  function endCinema(){
+    chord([523.25,659.25,783.99,1046.5]);        // 着地の明るい和音
+    cinema.classList.add('fade');                 // 0.3秒でパッと幕引き
+    later(()=>{ cinema.style.display='none'; bodyEl.classList.remove('locked');
+      main.setAttribute('aria-hidden','false'); main.classList.add('reveal'); window.scrollTo(0,0); },300);
+  }
+
+  /* ===== スクロールで言葉 ===== */
+  const ioWords=new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); }); },{threshold:.4});
+  wordEls.forEach(el=>ioWords.observe(el));
+
+  const finale=$('#finale'), loveText=$('#loveText'), loveJp=$('#loveJp'), signText=$('#signText'), replay=$('#replay');
+  new IntersectionObserver((es)=>{ es.forEach(e=>{ if(e.isIntersecting){
+      loveText.classList.add('in'); loveJp.classList.add('in'); signText.classList.add('in'); replay.classList.add('in'); fireFinale();
+    }}); },{threshold:.5}).observe(finale);
+
+  addEventListener('scroll',()=>{ if(scrollY>40){ const h=$('#scrollHint'); if(h) h.style.opacity=0; } },{passive:true});
+
+  /* ===== フィナーレ演出 ===== */
+  const cf=$('#confetti'), cctx=cf.getContext('2d');
+  let cw,ch,conf=[],running=false,fired=false;
+  function cfSize(){ cw=cf.width=innerWidth; ch=cf.height=innerHeight; }
+  cfSize(); addEventListener('resize',cfSize);
+  const palette=()=>[GOLD,SEC,'#fffbe9','#ffffff'];
+  function addBurst(x,y){ const cols=palette(); for(let i=0;i<46;i++){ const a=Math.random()*6.283, sp=2+Math.random()*4.5;
+    conf.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,grav:.045,r:1.5+Math.random()*2.5,shape:'c',col:cols[(Math.random()*cols.length)|0],life:1,decay:.012+Math.random()*.01,rot:0,vr:0}); } }
+  function spawnConfetti(){ const cols=palette(); for(let i=0;i<170;i++){
+    conf.push({x:Math.random()*cw,y:-20-Math.random()*ch*.5,w:4+Math.random()*7,h:7+Math.random()*12,vx:(Math.random()-.5)*1.6,vy:1.5+Math.random()*3.5,grav:.03,rot:Math.random()*6.3,vr:(Math.random()-.5)*.25,col:cols[(Math.random()*cols.length)|0],shape:'r',life:1,decay:.0035,sway:Math.random()*6.3}); } }
+  function spawnEmbers(){ const cols=[SEC,'#fff1c0',GOLD]; for(let i=0;i<140;i++){
+    conf.push({x:Math.random()*cw,y:ch+Math.random()*60,vx:(Math.random()-.5)*.7,vy:-(1+Math.random()*2.6),grav:-.002,r:1.5+Math.random()*3,shape:'c',col:cols[(Math.random()*cols.length)|0],life:1,decay:.005+Math.random()*.006,rot:0,vr:0}); } }
+  function fireFinale(){ if(fired) return; fired=true; chord();
+    const t=theme?theme.finale:'confetti';
+    if(t==='fireworks'){ for(let k=0;k<6;k++) cinemaTimers.push(setTimeout(()=>addBurst(cw*(.25+Math.random()*.5),ch*(.2+Math.random()*.35)),k*430)); }
+    else if(t==='embers'){ spawnEmbers(); }
+    else { spawnConfetti(); }
+    if(!running){ running=true; confLoop(); }
+  }
+  function confLoop(){ cctx.clearRect(0,0,cw,ch); let alive=0;
+    for(const p of conf){ if(p.life<=0) continue; alive++;
+      if(p.shape==='r'){ p.sway+=.05; p.x+=p.vx+Math.sin(p.sway)*.8; } else p.x+=p.vx;
+      p.vy+=p.grav; p.y+=p.vy; p.rot+=p.vr; p.life-=p.decay;
+      if(p.y>ch+40||p.y<-60) p.life=0;
+      const al=Math.max(0,Math.min(1,p.life)); cctx.globalAlpha=al; cctx.fillStyle=p.col;
+      if(p.shape==='r'){ cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.rot); cctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cctx.restore(); }
+      else { cctx.beginPath(); cctx.arc(p.x,p.y,p.r,0,6.283); cctx.shadowBlur=8; cctx.shadowColor=p.col; cctx.fill(); cctx.shadowBlur=0; }
+    }
+    cctx.globalAlpha=1;
+    if(alive>0) requestAnimationFrame(confLoop); else { running=false; cctx.clearRect(0,0,cw,ch); }
+  }
+
+  /* ===== もう一度（別の文字を選べる） ===== */
+  replay.addEventListener('click',()=>{
+    clearTimers(); fired=false; started=false; conf=[];
+    document.querySelectorAll('.in').forEach(e=>e.classList.remove('in'));
+    main.classList.remove('reveal'); main.setAttribute('aria-hidden','true');
+    bodyEl.classList.add('locked');
+    cinema.style.display=''; cinema.classList.remove('fade','show');
+    $('#cDate').classList.remove('fade-io'); $('#cConcept').classList.remove('fade-io');
+    $('#cName').className='cine-line cine-name'; $('#cName').innerHTML='';
+    $('#cCount').className='cine-count'; $('#cCount').textContent=''; $('#cCount').style.opacity='';
+    gate.style.display=''; gate.classList.remove('gone');
+    const h=$('#scrollHint'); if(h) h.style.opacity='';
+    initBG('dust');
+    window.scrollTo(0,0);
+  });
+
+})();
+</script>
+</body>
+</html>
